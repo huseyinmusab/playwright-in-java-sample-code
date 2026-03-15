@@ -2,6 +2,7 @@ package com.serenitydojo.playwright;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.microsoft.playwright.*;
 import org.assertj.core.api.Assertions;
@@ -12,8 +13,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
@@ -32,7 +35,7 @@ public class PlaywrightRestAPITest {
         playwright = Playwright.create();
         playwright.selectors().setTestIdAttribute("data-test");
         browser = playwright.chromium().launch(
-                new BrowserType.LaunchOptions().setHeadless(true)
+                new BrowserType.LaunchOptions().setHeadless(false)
                         .setArgs(Arrays.asList("--no-sandbox", "--disable-extensions", "--disable-gpu"))
         );
     }
@@ -141,15 +144,52 @@ public class PlaywrightRestAPITest {
             JsonObject jsonObject = new Gson().fromJson(response.text(), JsonObject.class);
             JsonArray data = jsonObject.getAsJsonArray("data");
 
-            return data.asList().stream()
-                    .map(jsonElement -> {
+            return data.asList().stream()// Listeyi bir akışa çevir
+                    .map(jsonElement -> {// Her bir JSON elemanı için şunları yap:
                         JsonObject productJson = jsonElement.getAsJsonObject();
                         return new Product(
-                                productJson.get("name").getAsString(),
-                                productJson.get("price").getAsDouble()
+                                productJson.get("name").getAsString(),// "name" alanını metin olarak al
+                                productJson.get("price").getAsDouble()// "price" alanını sayı olarak al
+
                         );
-                    });
+                    })
+                    .peek(x -> System.out.println("İşlenen Ürün: " + x.name() + " - " + x.price()));
+            // ^ Burada her bir Product oluştuğunda konsola yazar.
+
+
         }
+//static List<Product> products() {
+//    // 1. API'den veriyi al
+//    APIResponse response = requestContext.get("/products?page=2");
+//
+//    // 2. JSON'a çevir
+//    JsonObject jsonObject = new Gson().fromJson(response.text(), JsonObject.class);
+//    JsonArray dataArray = jsonObject.getAsJsonArray("data");
+//
+//    //bos list
+//    List<Product> urunListesi = new ArrayList<>();
+//
+//    System.out.println("--- API'den Gelen Ürünler Listeleniyor ---");
+//
+//    // 3. Her bir ürünü tek tek dön
+//    for (JsonElement eleman : dataArray) {
+//        JsonObject urunJson = eleman.getAsJsonObject();
+//
+//        // Verileri ayıkla
+//        String isim = urunJson.get("name").getAsString();
+//        Double fiyat = urunJson.get("price").getAsDouble();
+//
+//        // KONSOLA YAZDIRMA: Burası istediğin kısım
+//        System.out.println("Ürün Adı: " + isim + " | Fiyatı: " +  );
+//
+//        // Listeye ekle (Testin çalışabilmesi için bu şart)
+//        urunListesi.add(new Product(isim, fiyat));
+//    }
+//
+//    System.out.println("--- Liste Başarıyla Hazırlandı (Toplam: " + urunListesi.size() + " ürün) ---");
+//
+//    return urunListesi;
+//}
 
     }
 }
